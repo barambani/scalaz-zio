@@ -30,8 +30,34 @@ abstract class Concurrent2[F[+_, +_]] extends Temporal2[F] { self =>
   def concurrentData: ConcurrentData2[F]
 
   /**
-   * Returns an effect that runs `fa` into its own separate `Fiber2`
-   * and returns the fiver as result.
+   * Returns an effect that runs `fa` into its own
+   * separate `Fiber2` and returns the fiber as
+   * result.
+   *
+   * TODO resolve this: It looks like from the docs
+   * that cats effect `start` inherits the cancellation
+   * status of the forked effect (see below).
+   * Should it be interruptible or inherited ?
+   * Anyway It must be reflected in the laws
+   *
+   * Sample taken from cats effect Concurrent:
+   *
+   * {{{
+   *   val F = Concurrent[IO]
+   *   val timer = Timer[IO]
+   *
+   *   // Normally Timer#sleep yields cancelable tasks
+   *   val tick = F.uncancelable(timer.sleep(10.seconds))
+   *
+   *   // This prints "Tick!" after 10 seconds, even if we are
+   *   // canceling the Fiber after start:
+   *   for {
+   *     fiber <- F.start(tick)
+   *     _ <- fiber.cancel
+   *     _ <- fiber.join
+   *     _ <- F.delay { println("Tick!") }
+   *   } yield ()
+   * }}}
    *
    * TODO: Example:
    * {{{
@@ -53,8 +79,9 @@ abstract class Concurrent2[F[+_, +_]] extends Temporal2[F] { self =>
   def yieldTo[E, A](fa: F[E, A]): F[E, A]
 
   /**
-   * Executes `fa` on the ExecutionContext `ec` and shifts back to
-   * the default one when completed.
+   * Executes `fa` on the ExecutionContext `ec`
+   * and shifts back to the default one when
+   * completed.
    *
    * TODO: Example:
    * {{{

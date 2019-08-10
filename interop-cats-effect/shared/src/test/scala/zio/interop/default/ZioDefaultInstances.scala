@@ -141,7 +141,7 @@ private[default] object ZioDefaultInstances {
       new ZioConcurrentData2 {}
 
     override def start[E, A](fa: IO[E, A]): IO[Nothing, Fiber2[IO, E, A]] =
-      fa.fork map fromFiber
+      fa.interruptible.fork map fromFiber
 
     override def yieldTo[E, A](fa: IO[E, A]): IO[E, A] =
       IO.yieldNow *> fa
